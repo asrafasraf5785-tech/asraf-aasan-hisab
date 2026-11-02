@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#166534">
+<title>ASRAF आसान हिसाब</title>
+<style>
+:root{--green:#166534;--light:#f0fdf4;--ink:#17211b;--muted:#647067;--red:#b91c1c;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f5;color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif}
+header{background:var(--green);color:white;padding:20px 16px 24px;border-radius:0 0 22px 22px}
+header .brand{font-size:12px;letter-spacing:1px;opacity:.85}header h1{margin:4px 0;font-size:25px}header p{margin:0;font-size:13px;opacity:.9}
+main{max-width:720px;margin:auto;padding:14px}
+.balance{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:-12px;box-shadow:0 5px 18px #00000008}
+.small{font-size:12px;color:var(--muted)}.amount{font-size:30px;font-weight:800;margin:3px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.stat{background:white;border:1px solid var(--line);border-radius:14px;padding:13px}.stat b{display:block;font-size:19px;margin-top:5px}
+.green{color:#15803d}.red{color:var(--red)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+button{border:0;border-radius:12px;padding:13px 12px;font-size:15px;font-weight:700;cursor:pointer}
+.income{background:#15803d;color:white}.expense{background:#b91c1c;color:white}.secondary{background:#e8f5ec;color:var(--green)}
+.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0}
+h2{font-size:17px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:12px;font:inherit;background:white}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.submit{width:100%;background:var(--green);color:white;margin-top:13px}
+.entry{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:0}.entry-title{font-weight:700}.entry-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.entry-right{text-align:right;white-space:nowrap}.delete{background:#fee2e2;color:#991b1b;padding:6px 9px;font-size:12px;margin-top:5px}
+.empty{color:var(--muted);font-size:13px;padding:8px 0}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+.hidden{display:none!important}
+@media(min-width:600px){main{padding:22px}.amount{font-size:34px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ASRAF GROUP</div>
+  <h1>आसान हिसाब</h1>
+  <p>आपके रोज़ के पैसे का सरल हिसाब</p>
+</header>
+<main>
+  <section class="balance">
+    <div class="small">कुल बैलेंस</div>
+    <div class="amount" id="balance">₹0</div>
+    <div class="small">आमदनी − खर्च (इस फोन में सेव)</div>
+  </section>
+  <section class="stats">
+    <div class="stat"><span class="small">कुल आमदनी</span><b class="green" id="totalIncome">₹0</b></div>
+    <div class="stat"><span class="small">कुल खर्च</span><b class="red" id="totalExpense">₹0</b></div>
+  </section>
+  <section class="actions">
+    <button class="income" onclick="showForm('income')">＋ पैसा आया</button>
+    <button class="expense" onclick="showForm('expense')">− पैसा गया</button>
+  </section>
+  <section class="panel hidden" id="formPanel">
+    <h2 id="formTitle">नई एंट्री</h2>
+    <form id="entryForm">
+      <input type="hidden" id="kind" value="income">
+      <label for="amountInput">रकम (₹) *</label>
+      <input id="amountInput" type="number" min="1" step="0.01" placeholder="जैसे 500" required>
+      <label for="noteInput">किसलिए? (विवरण)</label>
+      <input id="noteInput" maxlength="100" placeholder="जैसे सामान बिक्री / दुकान का किराया">
+      <div class="row">
+        <div><label for="dateInput">तारीख</label><input id="dateInput" type="date" required></div>
+        <div><label for="categoryInput">श्रेणी</label>
+          <select id="categoryInput"><option>व्यापार</option><option>बिक्री</option><option>खरीदारी</option><option>किराया</option><option>यात्रा</option><option>घर</option><option>अन्य</option></select>
+        </div>
+      </div>
+      <button class="submit" type="submit">हिसाब सेव करें</button>
+      <button class="secondary" type="button" style="width:100%;margin-top:8px" onclick="hideForm()">रद्द करें</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>हिसाब की एंट्री</h2>
+    <div class="row">
+      <div><label for="filterInput">प्रकार</label><select id="filterInput" onchange="render()"><option value="all">सभी</option><option value="income">आमदनी</option><option value="expense">खर्च</option></select></div>
+      <div><label for="searchInput">खोजें</label><input id="searchInput" placeholder="विवरण खोजें" oninput="render()"></div>
+    </div>
+    <div id="entries"><div class="empty">अभी कोई एंट्री नहीं है। ऊपर से पैसा आया या गया जोड़ें।</div></div>
+  </section>
+  <section class="panel">
+    <h2>डेटा बैकअप</h2>
+    <p class="small">आपका हिसाब इसी ब्राउज़र/फोन में सेव होता है। फोन बदलने या ब्राउज़र का डेटा मिटाने पर हिसाब खो सकता है। समय-समय पर बैकअप डाउनलोड करें।</p>
+    <div class="actions" style="margin-bottom:0">
+      <button class="secondary" onclick="exportData()">बैकअप डाउनलोड</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">बैकअप वापस लाएं</button>
+    </div>
+    <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importData(event)">
+  </section>
+  <footer>ASRAF GROUP • आसान हिसाब<br>पहला संस्करण — ऑफलाइन हिसाब</footer>
+</main>
+<script>
+const KEY='asraf_aasan_hisab_v1';
+let records=[];
+try{records=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(records))records=[]}catch(e){records=[]}
+const today=new Date().toLocaleDateString('en-CA');
+document.getElementById('dateInput').value=today;
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+function save(){localStorage.setItem(KEY,JSON.stringify(records));render()}
+function showForm(type){document.getElementById('kind').value=type;document.getElementById('formTitle').textContent=type==='income'?'पैसा आया जोड़ें':'पैसा गया जोड़ें';document.getElementById('formPanel').classList.remove('hidden');document.getElementById('amountInput').focus()}
+function hideForm(){document.getElementById('formPanel').classList.add('hidden');document.getElementById('entryForm').reset();document.getElementById('dateInput').value=today}
+document.getElementById('entryForm').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('amountInput').value);if(!Number.isFinite(amount)||amount<=0){alert('कृपया सही रकम लिखें।');return}records.unshift({id:Date.now().toString(),type:document.getElementById('kind').value,amount,note:document.getElementById('noteInput').value.trim(),date:document.getElementById('dateInput').value||today,category:document.getElementById('categoryInput').value});save();hideForm()});
+function removeEntry(id){if(confirm('क्या आप यह एंट्री हटाना चाहते हैं?')){records=records.filter(x=>x.id!==id);save()}}
+function render(){const income=records.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);const expense=records.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);document.getElementById('balance').textContent=money(income-expense);document.getElementById('totalIncome').textContent=money(income);document.getElementById('totalExpense').textContent=money(expense);const filter=document.getElementById('filterInput').value;const q=document.getElementById('searchInput').value.toLowerCase();const filtered=records.filter(x=>(filter==='all'||x.type===filter)&&(`${x.note} ${x.category} ${x.date}`).toLowerCase().includes(q));const el=document.getElementById('entries');if(!filtered.length){el.innerHTML='<div class="empty">कोई एंट्री नहीं मिली।</div>';return}el.innerHTML=filtered.map(x=>`<div class="entry"><div><div class="entry-title">${escapeHTML(x.note||x.category||'बिना विवरण')}</div><div class="entry-meta">${escapeHTML(x.date)} • ${escapeHTML(x.category)}</div></div><div class="entry-right"><div class="${x.type==='income'?'green':'red'}" style="font-weight:800">${x.type==='income'?'+':'−'}${money(x.amount)}</div><button class="delete" onclick="removeEntry('${x.id}')">हटाएं</button></div></div>`).join('')}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function exportData(){const blob=new Blob([JSON.stringify({app:'ASRAF आसान हिसाब',version:1,records},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ASRAF_Hisab_Backup.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!Array.isArray(data.records))throw new Error();if(confirm('मौजूदा हिसाब की जगह बैकअप लोड होगा। आगे बढ़ें?')){records=data.records;save();alert('बैकअप वापस आ गया।')}}catch(e){alert('यह सही ASRAF हिसाब बैकअप फाइल नहीं है।')}event.target.value=''};reader.readAsText(file)}
+render();
+</script>
+</body>
+</html>
